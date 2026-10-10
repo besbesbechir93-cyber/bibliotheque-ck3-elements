@@ -45,8 +45,10 @@ FIELD_TARGETS = {
     "government_has_flag": "government_flag",
     "has_government_flag": "government_flag",
     "has_law": "law",
+    "activity_type": "activity",
 }
 GUI_REFERENCE_FIELDS = frozenset(("widget", "widget_name", "window", "window_name"))
+GUI_DYNAMIC_FIELDS = frozenset(("datacontext", "onclick", "visible", "enabled", "text", "tooltip", "tooltip_text", "dataobject", "effect", "parentanchor"))
 SPRITE_REFERENCE_FIELDS = frozenset(("sprite", "sprite_name", "icon", "icon_sprite"))
 LOCALIZATION_FIELDS = frozenset(("desc", "text", "tooltip", "title", "localization_key", "custom_tooltip", "province_description"))
 DECLARATION_CATEGORIES = {
@@ -107,6 +109,31 @@ def _parse(text: str) -> tuple[list, dict[int, int], list[tuple[int, int, int, i
     return ts, end, assignments
 
 
+def _on_action_entries(ts: list, open_index: int, close_index: int, *, weighted: bool) -> list[tuple[str, int]]:
+    """Read supported top-level entries in on_action event/on_action lists.
+
+    Nested blocks and numeric weights are skipped. This does not evaluate
+    triggers, weights, dynamic effects or game-engine dispatch.
+    """
+    items: list[tuple[str, int]] = []
+    depth = 0
+    i = open_index + 1
+    while i < close_index:
+        word = ts[i].text
+        if word == "{":
+            depth += 1
+        elif word == "}":
+            depth -= 1
+        elif depth == 0:
+            if weighted and word.isdigit() and i + 2 < close_index and ts[i + 1].text == "=":
+                items.append((ts[i + 2].text, ts[i + 2].start))
+                i += 2
+            elif not weighted and word not in ("=", "?=") and (i + 1 >= close_index or ts[i + 1].text != "="):
+                items.append((word, ts[i].start))
+        i += 1
+    return items
+
+
 def _file_digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -130,6 +157,8 @@ def scan(vanilla_root: Path, *, version: str = "unspecified", max_file_bytes: in
     edge_seen = set()
     unresolved: list[dict] = []
     warnings: list[dict] = []
+    dynamic_references: list[dict] = []
+    dynamic_seen: set[tuple[str, str, int, str]] = set()
     pending: list[tuple[str, str, str, str, int, str]] = []
     possible_script_calls: list[tuple[str, str, str, int]] = []
     symbol_defs: dict[str, list[dict]] = defaultdict(list)
@@ -224,6 +253,24 @@ def scan(vanilla_root: Path, *, version: str = "unspecified", max_file_bytes: in
                             roots[vi] = define(kind, name, rel, line_of(ts[sub_k].start))
                             break
 
+        # Explicit on_action event lists. CK3 uses both `events = { x.1 }`
+        # and `random_events = { 100 = x.1 }`. They are not generic scalar
+        # assignments, so v0.2 skipped them. Names inside nested conditions
+        # are deliberately excluded until a separate grammar is supported.
+        if category == "on_action":
+            for ki, _, vi, owner in assn:
+                if owner not in roots or ts[vi].text != "{":
+                    continue
+                kind = ts[ki].text
+                if kind not in ("events", "random_events", "on_actions"):
+                    continue
+                origin = roots[owner]
+                weighted = kind == "random_events"
+                for value, offset in _on_action_entries(ts, vi, brace_end[vi], weighted=weighted):
+                    target_kind = "on_action" if kind == "on_actions" else "event"
+                    if (ATOM.fullmatch(value) if target_kind == "on_action" else EVENT_ID.fullmatch(value)):
+                        pending.append((origin, target_kind, value, rel, line_of(offset), "exact"))
+
         # Government flags appear as a bare list in a `flags` block.
         if category == "government":
             for ki, _, vi, owner in assn:
@@ -268,13 +315,28 @@ def scan(vanilla_root: Path, *, version: str = "unspecified", max_file_bytes: in
             origin = source_at(owner)
             line_num = line_of(ts[ki].start)
             target_type = FIELD_TARGETS.get(field)
+            if rel.startswith("gui/") and field.lower() in GUI_DYNAMIC_FIELDS and token.text.startswith('"'):
+                if "[" in value or "Get" in value or "GuiScope" in value:
+                    marker = (origin, rel, line_num, field)
+                    if marker not in dynamic_seen:
+                        dynamic_seen.add(marker)
+                        dynamic_references.append({"source": origin, "kind": "gui_expression",
+                                                   "field": field, "evidence": {"path": rel, "line": line_num},
+                                                   "reason": "runtime_binding_unresolved"})
             if field == "trigger_event" and EVENT_ID.fullmatch(value):
                 target_type = "event"
-            elif field == "id" and EVENT_ID.fullmatch(value):
-                # Only an event reference inside a trigger_event block, not an event declaration.
-                if owner is not None:
-                    if block_keys.get(owner) == "trigger_event":
-                        target_type = "event"
+            elif field == "id" and owner is not None and block_keys.get(owner) == "trigger_event":
+                # Distinguish literal event dispatch from unrecognized runtime
+                # references. Only evidence metadata is kept, not script bodies.
+                if EVENT_ID.fullmatch(value):
+                    target_type = "event"
+                else:
+                    marker = (origin, rel, line_num, "id")
+                    if marker not in dynamic_seen:
+                        dynamic_seen.add(marker)
+                        dynamic_references.append({"source": origin, "kind": "event_dispatch",
+                                                   "field": "id", "evidence": {"path": rel, "line": line_num},
+                                                   "reason": "dynamic_event_id_unresolved"})
             elif field == "illustration" and ASSET_PATH.fullmatch(value):
                 target_type = None
             if target_type and ATOM.fullmatch(value):
@@ -326,14 +388,15 @@ def scan(vanilla_root: Path, *, version: str = "unspecified", max_file_bytes: in
     edges.sort(key=lambda e: (e["source"], e["target"], e["relation"], e["evidence"]["path"], e["evidence"]["line"]))
     unresolved.sort(key=lambda e: (e["source"], e["target_kind"], e["identifier"], e["evidence"]["path"], e["evidence"]["line"]))
     warnings.sort(key=lambda w: (w.get("path", ""), w.get("reason", ""), w.get("symbol", "")))
+    dynamic_references.sort(key=lambda e: (e["source"], e["evidence"]["path"], e["evidence"]["line"], e["field"]))
     return {"schema_version": 1, "status": "STATIC_PARTIAL_NOT_GAME_VALIDATED",
             "source_version_label": version,
             "limitations": ["Not a full CK3 grammar or engine dependency analyzer.",
                              "Dynamic references, GUI bindings, inline localization and hardcoded mechanics are not exhaustively resolved.",
                              "Unresolved does not imply an error; absent edges do not prove independence."],
             "nodes": [nodes[k] for k in sorted(nodes)], "edges": edges,
-            "unresolved": unresolved, "warnings": warnings,
-            "summary": {"nodes": len(nodes), "edges": len(edges), "unresolved": len(unresolved), "warnings": len(warnings)}}
+            "unresolved": unresolved, "warnings": warnings, "dynamic_references": dynamic_references,
+            "summary": {"nodes": len(nodes), "edges": len(edges), "unresolved": len(unresolved), "warnings": len(warnings), "dynamic_references": len(dynamic_references)}}
 
 
 def _is_direct_token(i: int, parent_open: int, ts: list) -> bool:

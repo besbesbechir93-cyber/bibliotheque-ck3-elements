@@ -1,45 +1,174 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/ck3lib/graph.schema.json",
-  "title": "CK3 Library Static Dependency Graph v1",
+  "title": "CK3 Library Static Dependency Graph v1 (0.3 optional diagnostics)",
   "type": "object",
   "additionalProperties": true,
-  "required": ["schema_version", "status", "source_version_label", "nodes", "edges", "unresolved", "warnings", "summary", "limitations"],
+  "required": [
+    "schema_version",
+    "status",
+    "source_version_label",
+    "nodes",
+    "edges",
+    "unresolved",
+    "warnings",
+    "summary",
+    "limitations"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "status": {"const": "STATIC_PARTIAL_NOT_GAME_VALIDATED"},
-    "source_version_label": {"type": "string"},
+    "schema_version": {
+      "const": 1
+    },
+    "status": {
+      "const": "STATIC_PARTIAL_NOT_GAME_VALIDATED"
+    },
+    "source_version_label": {
+      "type": "string"
+    },
     "nodes": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "kind"],
-        "properties": {"id": {"type": "string"}, "kind": {"type": "string"}, "name": {"type": "string"}, "path": {"type": "string"}, "definitions": {"type": "array"}}
+        "required": [
+          "id",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "definitions": {
+            "type": "array"
+          }
+        }
       }
     },
     "edges": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["source", "target", "relation", "evidence", "confidence"],
+        "required": [
+          "source",
+          "target",
+          "relation",
+          "evidence",
+          "confidence"
+        ],
         "properties": {
-          "source": {"type": "string"}, "target": {"type": "string"},
-          "relation": {"enum": ["defines", "declares_flag", "references", "calls_script", "uses_asset", "localizes"]},
-          "confidence": {"enum": ["exact", "heuristic"]},
-          "evidence": {"$ref": "#/$defs/evidence"}
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "relation": {
+            "enum": [
+              "defines",
+              "declares_flag",
+              "references",
+              "calls_script",
+              "uses_asset",
+              "localizes"
+            ]
+          },
+          "confidence": {
+            "enum": [
+              "exact",
+              "heuristic"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/$defs/evidence"
+          }
         }
       }
     },
-    "unresolved": {"type": "array", "items": {"type": "object"}},
-    "warnings": {"type": "array", "items": {"type": "object"}},
-    "summary": {"type": "object", "required": ["nodes", "edges", "unresolved", "warnings"]},
-    "limitations": {"type": "array", "items": {"type": "string"}},
-    "query": {"type": "object"}
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "nodes",
+        "edges",
+        "unresolved",
+        "warnings"
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "query": {
+      "type": "object"
+    },
+    "dynamic_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "kind",
+          "field",
+          "evidence",
+          "reason"
+        ],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/$defs/evidence"
+          },
+          "reason": {
+            "enum": ["runtime_binding_unresolved", "dynamic_event_id_unresolved"]
+          }
+        }
+      }
+    }
   },
   "$defs": {
     "evidence": {
-      "type": "object", "required": ["path", "line"],
-      "properties": {"path": {"type": "string"}, "line": {"type": "integer", "minimum": 1}}
+      "type": "object",
+      "required": [
+        "path",
+        "line"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
   }
 }
