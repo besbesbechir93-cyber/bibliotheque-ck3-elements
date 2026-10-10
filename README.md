@@ -129,3 +129,25 @@ déclarations ou références qu'il ne sait pas traiter. Voir
 ## Étapes suivantes
 
 À partir de la v0.3 : adaptateurs d'événements / localisation / GUI, mécanisme de clonage des dépendances optionnelles, validation CK3 1.20.x et DLC, rapports de conflits et diff, puis composition multi-composants (fiscalité, mérite, maisons, blocs).
+
+## Assemblage activité + événements + `on_action` — v0.6 (fragment lié, expérimental)
+
+Le module `ck3lib.wiring` part d'un fragment de clone d'événements v0.5
+et de deux sources vanilla à SHA Git verrouillé (un fichier d'activité et
+un fichier `on_action`, chacun à déclaration unique). Il produit un **nouveau
+fragment** avec une activité, un `on_action` privés et les événements clonés,
+en redirigeant uniquement les appels statiques reconnus. Il ne modifie ni
+les sources du jeu ni le fragment v0.5 d'origine.
+
+```bash
+PYTHONPATH=src python -m ck3lib.wiring \
+  --recipe /chemin/vers/wiring.json \
+  --vanilla-root /chemin/vers/CK3/game \
+  --event-fragment /tmp/cklib-events-v05 \
+  --output /tmp/cklib-linked-v06
+```
+
+**Attention :** ce n'est pas un mod complet et rien n'a été validé en jeu.
+Les fichiers vanilla regroupant plusieurs définitions et les dépendances
+GUI/GFX/localisation nécessitent d'autres adaptateurs. Voir
+[le guide v0.6](docs/activity-on-action-wiring.md).

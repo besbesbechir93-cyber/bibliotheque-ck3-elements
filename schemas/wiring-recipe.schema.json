@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3lib/wiring-recipe.v1.schema.json",
+  "title": "CK3 library activity/event/on_action wiring recipe v0.6",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "activity", "on_action"],
+  "properties": {
+    "version": {"const": 1},
+    "activity": {"$ref": "#/$defs/source"},
+    "on_action": {"$ref": "#/$defs/source"}
+  },
+  "$defs": {
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_path", "source_git_blob_sha", "source_id", "target_id"],
+      "properties": {
+        "source_path": {"type": "string", "minLength": 1},
+        "source_git_blob_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "source_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "target_id": {"type": "string", "pattern": "^cklib_[a-z0-9_]+$"}
+      }
+    }
+  }
+}
