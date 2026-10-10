@@ -82,10 +82,10 @@ class ComposerTests(unittest.TestCase):
     def test_existing_mod_descriptor_is_protected(self):
         self.out.mkdir()
         existing = self.out / 'descriptor.mod'
-        existing.write_text('name="Existing Mod"\\n')
+        existing.write_text('name="Existing Mod"\n')
         with self.assertRaisesRegex(CompositionError, 'Refusing to overwrite'):
             compose(self.recipe, self.vanilla, self.out)
-        self.assertEqual(existing.read_text(), 'name="Existing Mod"\\n')
+        self.assertEqual(existing.read_text(), 'name="Existing Mod"\n')
 
 if __name__ == '__main__':
     unittest.main()
