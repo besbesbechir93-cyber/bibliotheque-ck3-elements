@@ -1,6 +1,6 @@
 # Bibliothèque CK3 Elements
 
-**Statut : prototypes 0.1–0.4 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
+**Statut : prototypes 0.1–0.5 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
 
 ## Principes non négociables
 
@@ -87,6 +87,26 @@ PYTHONPATH=src python -m ck3lib.adapters \
 
 Voir [le guide v0.4](docs/adapter-dry-run.md) pour les risques et limites.
 
+## Clonage d’événements — v0.5 (fragment exécutable, strict)
+
+Le module `ck3lib.event_cloner` est le premier **exécuteur** du pipeline : il
+clone un **fichier d'événements complet** dans un dossier neuf, avec un namespace
+propre, un inventaire de ses événements et une empreinte de source obligatoires.
+Il ne remplace jamais de scripts vanilla et ne modifie pas les fichiers du jeu.
+
+```bash
+PYTHONPATH=src python -m ck3lib.event_cloner \
+  --recipe /chemin/vers/event-recipe.json \
+  --vanilla-root /chemin/vers/Crusader\ Kings\ III/game \
+  --output /chemin/vers/nouveau_fragment_evenements
+```
+
+**Important :** sorties = fragment de mod + rapport, *sans* activation d'événements
+ni connexion des `on_action`. Les GUI, GFX, localisations et dépendances
+externes ne sont ni copiés ni garantis. Le parseur refuse les fichiers avec des
+déclarations ou références qu'il ne sait pas traiter. Voir
+[le guide v0.5](docs/event-file-cloner.md).
+
 ## Structure
 
 - `docs/architecture.md` : architecture et politiques de composition.
@@ -97,6 +117,8 @@ Voir [le guide v0.4](docs/adapter-dry-run.md) pour les risques et limites.
 - `src/ck3lib/indexer.py` : indexeur statique, traversée de graphe et analyse inverse.
 - `src/ck3lib/planner.py` : audit de composition sans génération de mod.
 - `src/ck3lib/adapters.py` : planification de réutilisation/clonage, sans génération.
+- `src/ck3lib/event_cloner.py` : clonage strict de fichiers d’événements entiers vers un fragment neuf.
+- `schemas/event-clone-recipe.schema.json` et `docs/event-file-cloner.md` : recette et limitations v0.5.
 - `schemas/adapter-recipe.schema.json` et `schemas/adapter-plan.schema.json` : contrats v0.4.
 - `schemas/integration-plan.schema.json` : contrat du rapport d'intégration.
 - `docs/integration-planner.md` : spécification et limites v0.3.
