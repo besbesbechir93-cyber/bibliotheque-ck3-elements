@@ -1,6 +1,6 @@
 # Bibliothèque CK3 Elements
 
-**Statut : prototypes 0.1–0.5 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
+**Statut : prototypes 0.1–0.7 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
 
 ## Principes non négociables
 
@@ -151,3 +151,23 @@ PYTHONPATH=src python -m ck3lib.wiring \
 Les fichiers vanilla regroupant plusieurs définitions et les dépendances
 GUI/GFX/localisation nécessitent d'autres adaptateurs. Voir
 [le guide v0.6](docs/activity-on-action-wiring.md).
+
+## Packaging et localisation/GFX — v0.7 (dossier de mod non validé)
+
+`ck3lib.package_mod` reprend le fragment v0.6, ajoute `descriptor.mod`,
+clône explicitement des clés YAML de localisation à nouveaux identifiants,
+et peut référencer ou copier (sur ordre explicite) des textures GFX de
+l'installation locale. Les sources sont verrouillées par SHA ; seuls les champs
+de script autorisés sont réécrits. Aucune ressource propriétaire n'entre
+dans ce dépôt. **Aucune promesse de compatibilité en jeu** ni adaptation GUI.
+
+```bash
+PYTHONPATH=src python -m ck3lib.package_mod \
+  --recipe /tmp/package-recipe.json \
+  --vanilla-root /chemin/vers/CK3/game \
+  --wired-fragment /tmp/cklib-linked-v06 \
+  --output /tmp/cklib-packaged-v07
+```
+
+Voir [le guide v0.7](docs/package-v0.7.md) et
+[`schemas/package-recipe.schema.json`](schemas/package-recipe.schema.json).
