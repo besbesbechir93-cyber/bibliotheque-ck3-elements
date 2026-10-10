@@ -1,6 +1,6 @@
 # Bibliothèque CK3 Elements
 
-**Statut : prototype expérimental 0.1 — non validé en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
+**Statut : prototype 0.1 + indexeur statique 0.2 expérimental — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
 
 ## Principes non négociables
 
@@ -30,6 +30,26 @@ L'exemple est **verrouillé sur la version 1.20.0.3** (`source_git_blob_sha`). S
 
 Le dossier généré contient `descriptor.mod`, le script d'activité et `composition-report.json`. Pour installation réelle, utiliser le lanceur Paradox pour préparer les fichiers `.mod` et valider en jeu ; ce prototype ne les configure pas automatiquement.
 
+## Analyse des dépendances — v0.2 (statique, partielle)
+
+L'indexeur lit en **lecture seule** les scripts, définitions, GUI/GFX textuels et clés de localisation, puis produit un graphe JSON avec les références typées, leurs preuves (fichier/ligne), les avertissements et les références non résolues.
+
+```bash
+PYTHONPATH=src python -m ck3lib.indexer \
+  --vanilla-root /chemin/vers/Crusader\ Kings\ III/game \
+  --output /tmp/ck3lib-graph.json \
+  --version 1.20.0.3 \
+  --query activity:activity_camp_party
+
+# Analyse inverse : quels composants indexés dépendent d'une capacité ?
+PYTHONPATH=src python -m ck3lib.indexer \
+  --vanilla-root /chemin/vers/Crusader\ Kings\ III/game \
+  --output /tmp/ck3lib-impact.json \
+  --query tax_slot:clan_tax_slot --reverse
+```
+
+**Important :** ce n'est ni un parseur CK3 exhaustif, ni une preuve de compatibilité en jeu ; les références dynamiques, nombreuses liaisons GUI et comportements hardcodés restent non résolus. Les « références non résolues » ne démontrent pas un défaut du jeu. Une version indiquée par `--version` est uniquement une étiquette. Voir [la spécification v0.2](docs/dependency-indexer.md).
+
 ## Structure
 
 - `docs/architecture.md` : architecture et politiques de composition.
@@ -37,8 +57,11 @@ Le dossier généré contient `descriptor.mod`, le script d'activité et `compos
 - `schemas/component.schema.json` : contrat de composant (brouillon, distinct de la recette).
 - `examples/` : recette d'activité et contrat de composant.
 - `src/ck3lib/composer.py` : compilateur expérimental en lecture seule côté vanilla.
+- `src/ck3lib/indexer.py` : indexeur statique, traversée de graphe et analyse inverse.
+- `schemas/graph.schema.json` : contrat du graphe JSON.
+- `docs/dependency-indexer.md` : spécification, limites, tests et prochaines étapes.
 - `tests/` : tests avec données synthétiques, aucun asset Paradox.
 
 ## Étapes suivantes
 
-Analyseur CK3 robuste et graphe de références typées ; adaptateurs d'événements / localisation / GUI ; clonage de dépendances optionnelles ; validation CK3 1.20.x et DLC ; rapports de conflits et diff; puis composition multi-composants (fiscalité, mérite, maisons, blocs, etc.).
+Amélioration du parseur et des références typées ; adaptateurs d'événements / localisation / GUI ; clonage de dépendances optionnelles ; validation CK3 1.20.x et DLC ; rapports de conflits et diff; puis composition multi-composants (fiscalité, mérite, maisons, blocs, etc.).
