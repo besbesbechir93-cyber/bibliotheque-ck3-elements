@@ -1,0 +1,13 @@
+{
+  "id": "cklib_activity_camp_party_demo",
+  "version": "0.1.0",
+  "kind": "activity",
+  "provides": ["activity.camp_party_clone"],
+  "requires": ["dlc.roads_to_power", "vanilla.events.ep3_camp_party", "vanilla.on_action.camp_party_destination_events", "vanilla.script_values.standard_camp_party_activity_cost", "vanilla.localization.activity_camp_party"],
+  "optional": ["gfx.camp_party"],
+  "conflicts": [],
+  "parameters": {"cooldown.years": 2, "max_province_icons": 2},
+  "sources": [{"game_version": "1.20.0.3", "path": "common/activities/activity_types/camp_party.txt", "sha": "8a3990c21ec7a84438696747aa368b2c1a67b0fe"}],
+  "integration": "clone",
+  "validation": "unreviewed"
+}

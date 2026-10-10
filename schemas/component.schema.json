@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3-library/component.schema.json",
+  "title": "CK3 reusable component contract - draft 0.1",
+  "type": "object",
+  "required": ["id", "version", "kind", "provides", "requires", "conflicts", "sources", "integration"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "version": {"type": "string"},
+    "kind": {"enum": ["activity", "government_capability", "mechanic", "gui", "gfx", "adapter"]},
+    "provides": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "requires": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "optional": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "conflicts": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "parameters": {"type": "object"},
+    "sources": {"type": "array", "items": {"type": "object", "required": ["game_version", "path", "sha"], "properties": {"game_version": {"type": "string"}, "path": {"type": "string"}, "sha": {"type": "string"}}}},
+    "integration": {"enum": ["reference", "extend", "clone", "override_review_required"]},
+    "validation": {"enum": ["unreviewed", "static", "in_game"]}
+  },
+  "additionalProperties": false
+}

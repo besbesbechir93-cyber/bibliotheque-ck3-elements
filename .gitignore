@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+build/
+dist/
+out/
+*.dds
+*.asset
+*.mesh
+*.png
+*.zip
+composition-report.json
