@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3lib/adapter-recipe-v1.schema.json",
+  "title": "CK3 library read-only adapter recipe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "component", "namespace", "graph_sha256", "default_dependency_policy", "decisions"],
+  "properties": {
+    "version": {"const": 1},
+    "component": {"type": "string", "pattern": "^[a-z_]+:[A-Za-z0-9_.-]+$"},
+    "namespace": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,23}$"},
+    "graph_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "default_dependency_policy": {"const": "reference"},
+    "decisions": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z_]+:[A-Za-z0-9_./-]+$"},
+      "additionalProperties": {"enum": ["reference", "clone", "exclude"]}
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3lib/adapter-plan-v1.schema.json",
+  "title": "CK3 library read-only adapter plan v1",
+  "type": "object",
+  "required": ["adapter_plan_version", "component", "namespace", "source_graph_sha256", "status", "game_validated", "generates_mod", "changes_vanilla", "operations", "inbound_cloned_references", "failures", "unresolved", "dynamic_references", "review_requirements", "summary"],
+  "properties": {
+    "adapter_plan_version": {"const": 1},
+    "component": {"type": "string"},
+    "namespace": {"type": "string"},
+    "source_graph_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source_version_label": {"type": ["string", "null"]},
+    "status": {"enum": ["STATIC_BLOCKERS_OR_GAPS", "REVIEW_REQUIRED"]},
+    "game_validated": {"const": false},
+    "generates_mod": {"const": false},
+    "changes_vanilla": {"const": false},
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "kind", "action", "proposed_identifier", "requires_manual_implementation", "review_checks"],
+        "properties": {
+          "source": {"type": "string"},
+          "kind": {"type": "string"},
+          "action": {"enum": ["reference", "clone", "exclude"]},
+          "proposed_identifier": {"type": ["string", "null"]},
+          "requires_manual_implementation": {"type": "boolean"},
+          "review_checks": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "inbound_cloned_references": {"type": "array"},
+    "failures": {"type": "array"},
+    "unresolved": {"type": "array"},
+    "dynamic_references": {"type": "array"},
+    "review_requirements": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "object"}
+  }
+}
