@@ -196,3 +196,23 @@ PYTHONPATH=src python -m ck3lib.validator \
 **Aucune validation automatique en jeu :** même un rapport sans erreur conserve
 `game_validated = false`. Pour les limites précises et le protocole de test,
 voir [le guide v0.8](docs/validation-bench-v0.8.md).
+
+## Mod de démonstration chargeable — v0.9 (test manuel requis)
+
+La v0.9 produit un **petit mod de validation** avec une décision et un événement
+indépendants, localisés en français et en anglais. Le choix de ce scénario réduit
+les risques avant les premiers essais d'une activité CK3 complète.
+
+```bash
+PYTHONPATH=src python -m ck3lib.smoke_demo \
+  --recipe examples/smoke-demo-v0.9.json --output /tmp/cklib-demo-install
+PYTHONPATH=src python -m ck3lib.validator \
+  --mod-dir /tmp/cklib-demo-install/cklib_smoke_v09 \
+  --report-out /tmp/cklib-demo-static-report.json
+```
+
+L'archive installable contient un dossier de mod et un `.mod` pour le launcher.
+Voir [la procédure de test v0.9](docs/smoke-demo-v0.9.md). **Les tests automatisés
+ne sont pas des tests en jeu.** Le chemin GFX vanilla est référencé, pas copié.
+La v0.8 corrige également la reconnaissance des décisions et des localisations
+multilingues, sans considérer les mêmes clés traduites comme des doublons.
