@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3lib/package-recipe.v1.schema.json",
+  "title": "CK3 Library v0.7 package recipe (restricted)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "name", "mod_version", "supported_version", "localizations", "gfx"],
+  "properties": {
+    "version": {"const": 1},
+    "name": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 _-]{2,64}$"},
+    "mod_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "supported_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.\\*$"},
+    "localizations": {
+      "type": "array", "maxItems": 12,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["source_path", "source_git_blob_sha", "language", "renames"],
+        "properties": {
+          "source_path": {"type": "string", "pattern": "^localization/[a-z_]+/[A-Za-z0-9_/-]+_l_[a-z_]+\\.yml$"},
+          "source_git_blob_sha": {"$ref": "#/$defs/sha"},
+          "language": {"type": "string", "pattern": "^[a-z_]+$"},
+          "renames": {
+            "type": "object", "minProperties": 1,
+            "additionalProperties": {"type": "string", "pattern": "^cklib_[A-Za-z0-9_.-]+$"}
+          }
+        }
+      }
+    },
+    "gfx": {
+      "type": "array", "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["mode", "source_path", "source_git_blob_sha"],
+        "properties": {
+          "mode": {"enum": ["reference", "clone"]},
+          "source_path": {"type": "string", "pattern": "^gfx/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.(?:dds|png|tga|jpg)$"},
+          "source_git_blob_sha": {"$ref": "#/$defs/sha"},
+          "target_path": {"type": "string", "pattern": "^gfx/cklib/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.(?:dds|png|tga|jpg)$"}
+        },
+        "allOf": [
+          {"if": {"properties": {"mode": {"const": "clone"}}}, "then": {"required": ["target_path"]}},
+          {"if": {"properties": {"mode": {"const": "reference"}}}, "then": {"not": {"required": ["target_path"]}}}
+        ]
+      }
+    }
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}
+}
