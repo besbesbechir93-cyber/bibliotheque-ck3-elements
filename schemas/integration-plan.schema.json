@@ -14,7 +14,7 @@
     "generates_mod": {"const": false},
     "reason": {"type": "string"},
     "dependency_nodes": {"type": "array", "items": {"type": "string"}},
-    "referenced_files": {"type": "array", "items": {"type": "object", "required": ["path", "kind", "read_only"], "properties": {"path": {"type": "string"}, "kind": {"type": "string"}, "sha256": {"type": ["string", "null"]}, "read_only": {"const": true}}},
+    "referenced_files": {"type": "array", "items": {"type": "object", "required": ["path", "kind", "read_only"], "properties": {"path": {"type": "string"}, "kind": {"type": "string"}, "sha256": {"type": ["string", "null"]}, "read_only": {"const": true}}}},
     "unresolved": {"type": "array"},
     "dynamic_references": {"type": "array"},
     "heuristic_edges": {"type": "array"},
