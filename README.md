@@ -1,6 +1,6 @@
 # Bibliothèque CK3 Elements
 
-**Statut : prototype 0.1 + indexeur statique 0.2 expérimental — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
+**Statut : prototypes 0.1–0.3 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
 
 ## Principes non négociables
 
@@ -50,6 +50,19 @@ PYTHONPATH=src python -m ck3lib.indexer \
 
 **Important :** ce n'est ni un parseur CK3 exhaustif, ni une preuve de compatibilité en jeu ; les références dynamiques, nombreuses liaisons GUI et comportements hardcodés restent non résolus. Les « références non résolues » ne démontrent pas un défaut du jeu. Une version indiquée par `--version` est uniquement une étiquette. Voir [la spécification v0.2](docs/dependency-indexer.md).
 
+## Préparation de composition — v0.3 (revue seulement)
+
+L'indexeur reconnaît désormais certaines listes d'événements des `on_action` (`events`, `random_events`, `on_actions`). Il enregistre aussi des **indices de liaisons GUI dynamiques non résolues** sans exposer le contenu des expressions. Le nouveau planificateur fournit un rapport de dépendances et de risques par composant, **sans générer ni modifier de mod** :
+
+```bash
+PYTHONPATH=src python -m ck3lib.planner \
+  --graph /tmp/ck3lib-graph.json \
+  --component activity:activity_camp_party \
+  --output /tmp/ck3lib-camp-party-plan.json
+```
+
+Tous les statuts demandent une validation manuelle ; `REVIEW_REQUIRED` ne signifie jamais compatible avec CK3. Les dépendances hardcodées, la plupart des data bindings GUI, les DPI des sprites et les contenus DLC conditionnels restent hors couverture. Voir [la spécification v0.3](docs/integration-planner.md).
+
 ## Structure
 
 - `docs/architecture.md` : architecture et politiques de composition.
@@ -58,10 +71,13 @@ PYTHONPATH=src python -m ck3lib.indexer \
 - `examples/` : recette d'activité et contrat de composant.
 - `src/ck3lib/composer.py` : compilateur expérimental en lecture seule côté vanilla.
 - `src/ck3lib/indexer.py` : indexeur statique, traversée de graphe et analyse inverse.
+- `src/ck3lib/planner.py` : audit de composition sans génération de mod.
+- `schemas/integration-plan.schema.json` : contrat du rapport d'intégration.
+- `docs/integration-planner.md` : spécification et limites v0.3.
 - `schemas/graph.schema.json` : contrat du graphe JSON.
 - `docs/dependency-indexer.md` : spécification, limites, tests et prochaines étapes.
 - `tests/` : tests avec données synthétiques, aucun asset Paradox.
 
 ## Étapes suivantes
 
-Amélioration du parseur et des références typées ; adaptateurs d'événements / localisation / GUI ; clonage de dépendances optionnelles ; validation CK3 1.20.x et DLC ; rapports de conflits et diff; puis composition multi-composants (fiscalité, mérite, maisons, blocs, etc.).
+À partir de la v0.3 : adaptateurs d'événements / localisation / GUI, mécanisme de clonage des dépendances optionnelles, validation CK3 1.20.x et DLC, rapports de conflits et diff, puis composition multi-composants (fiscalité, mérite, maisons, blocs).

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3lib/integration-plan.schema.json",
+  "title": "CK3 Component Static Integration Review Plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["plan_version", "component", "source_version_label", "status", "game_validated", "generates_mod", "reason", "dependency_nodes", "referenced_files", "unresolved", "dynamic_references", "heuristic_edges", "warnings", "review_requirements", "summary"],
+  "properties": {
+    "plan_version": {"const": 1},
+    "component": {"type": "string"},
+    "source_version_label": {"type": "string"},
+    "status": {"enum": ["STATIC_BLOCKERS_OR_GAPS", "REVIEW_REQUIRED"]},
+    "game_validated": {"const": false},
+    "generates_mod": {"const": false},
+    "reason": {"type": "string"},
+    "dependency_nodes": {"type": "array", "items": {"type": "string"}},
+    "referenced_files": {"type": "array", "items": {"type": "object", "required": ["path", "kind", "read_only"], "properties": {"path": {"type": "string"}, "kind": {"type": "string"}, "sha256": {"type": ["string", "null"]}, "read_only": {"const": true}}},
+    "unresolved": {"type": "array"},
+    "dynamic_references": {"type": "array"},
+    "heuristic_edges": {"type": "array"},
+    "warnings": {"type": "array"},
+    "review_requirements": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "object"}
+  }
+}

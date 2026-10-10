@@ -191,3 +191,82 @@ activity_example = {
 
 if __name__ == '__main__':
     unittest.main()
+
+class OnActionCoverageTests(unittest.TestCase):
+    """Additional CK3 forms observed in vanilla on_action scripts."""
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.vanilla = Path(temp.name) / "game"
+        self.vanilla.mkdir()
+
+    def write(self, rel, data):
+        path = self.vanilla / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(data, encoding="utf-8")
+        return path
+
+    def test_event_list_and_weighted_events_are_resolved(self):
+        self.write('common/on_action/activities/pulse.txt', '''
+festival_random_pulse = {
+  events = { example.001 example.002 }
+  random_events = { 100 = example.003 0 = 0 50 = example.004 }
+  on_actions = { festival_nested_pulse }
+}
+festival_nested_pulse = { events = { example.005 } }
+''')
+        self.write('events/test.txt', '''
+character_event = { id = example.001 }
+character_event = { id = example.002 }
+character_event = { id = example.003 }
+character_event = { id = example.004 }
+character_event = { id = example.005 }
+''')
+        graph = scan(self.vanilla)
+        pairs = {(e['source'], e['target']) for e in graph['edges']}
+        for suffix in ('001', '002', '003', '004'):
+            self.assertIn(('on_action:festival_random_pulse', f'event:example.{suffix}'), pairs)
+        self.assertIn(('on_action:festival_random_pulse', 'on_action:festival_nested_pulse'), pairs)
+        self.assertEqual(0, graph['summary']['unresolved'])
+
+    def test_ignores_comment_string_and_nested_event_tokens(self):
+        self.write('common/on_action/test.txt', '''
+on_test = { events = { legit.001 # false.001
+    conditional = { garbage.001 } "quoted.001"
+} }
+''')
+        self.write('events/real.txt', 'character_event = { id = legit.001 }')
+        graph = scan(self.vanilla)
+        edges = [(e['source'], e['target']) for e in graph['edges']]
+        self.assertIn(('on_action:on_test', 'event:legit.001'), edges)
+        self.assertNotIn(('on_action:on_test', 'event:garbage.001'), edges)
+        self.assertFalse(any(w.get('identifier') in ('quoted.001', 'false.001') for w in graph['unresolved']))
+
+    def test_gui_dynamic_expression_is_only_recorded_as_metadata(self):
+        self.write('gui/test.gui', '''windowType = {
+ name = "box" text = "[GetSomething.GetName]" onclick = "[GuiScope.SetVariable('secret')]"
+}''')
+        graph = scan(self.vanilla)
+        self.assertEqual(graph['summary']['dynamic_references'], 2)
+        self.assertTrue(all(x['reason'] == 'runtime_binding_unresolved' for x in graph['dynamic_references']))
+        self.assertNotIn('GetSomething', json.dumps(graph))
+
+    def test_unrelated_gui_literals_do_not_count_as_dynamic(self):
+        self.write('gui/test.gui', 'windowType = { name = "box" text = "Fixed label" }')
+        graph = scan(self.vanilla)
+        self.assertEqual([], graph['dynamic_references'])
+
+
+class DynamicDispatchTests(unittest.TestCase):
+    def test_unresolved_trigger_event_dispatch_is_not_ignored(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'common/activities/activity_types').mkdir(parents=True)
+            (root / 'common/activities/activity_types/x.txt').write_text("""activity_x = {
+                on_start = { trigger_event = { id = scope:dynamic_event } }
+            }""")
+            graph = scan(root)
+            self.assertEqual(1, graph['summary']['dynamic_references'])
+            self.assertEqual('dynamic_event_id_unresolved', graph['dynamic_references'][0]['reason'])
+            self.assertNotIn('scope:dynamic_event', json.dumps(graph))
