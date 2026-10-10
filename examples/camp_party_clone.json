@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "kind": "activity_clone",
+  "source_version": "CK3 1.20.0.3 (Crozier)",
+  "source_id": "activity_camp_party",
+  "source_path": "common/activities/activity_types/camp_party.txt",
+  "source_git_blob_sha": "8a3990c21ec7a84438696747aa368b2c1a67b0fe",
+  "target_id": "cklib_activity_camp_party_demo",
+  "overrides": {
+    "cooldown.years": 2,
+    "max_province_icons": 2
+  },
+  "assets": []
+}
