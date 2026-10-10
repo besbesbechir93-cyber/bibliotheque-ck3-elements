@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3lib/validation-report.v1.schema.json",
+  "type": "object",
+  "required": ["version", "status", "game_validated", "vanilla_modified", "summary", "diagnostics", "log_triage", "limitations"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {"const": 1},
+    "status": {"enum": ["STATIC_REVIEW_REQUIRED", "STATIC_FINDINGS_REVIEW_REQUIRED"]},
+    "game_validated": {"const": false},
+    "vanilla_modified": {"const": false},
+    "summary": {
+      "type": "object",
+      "required": ["files", "localizations", "events_defined", "on_actions_defined", "event_calls_recognized", "errors", "warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "files": {"type": "integer", "minimum": 0},
+        "localizations": {"type": "integer", "minimum": 0},
+        "events_defined": {"type": "array", "items": {"type": "string"}},
+        "on_actions_defined": {"type": "array", "items": {"type": "string"}},
+        "event_calls_recognized": {"type": "integer", "minimum": 0},
+        "errors": {"type": "integer", "minimum": 0},
+        "warnings": {"type": "integer", "minimum": 0}
+      }
+    },
+    "diagnostics": {
+      "type": "array", "items": {
+        "type": "object", "required": ["severity", "code", "path", "detail"], "additionalProperties": false,
+        "properties": {
+          "severity": {"enum": ["error", "warning"]},
+          "code": {"type": "string"},
+          "path": {"type": "string"},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "log_triage": {
+      "type": "object", "required": ["logs_provided", "entries_seen", "attributable_errors", "other_errors"],
+      "properties": {
+        "logs_provided": {"type": "boolean"},
+        "entries_seen": {"type": "integer", "minimum": 0},
+        "other_errors": {"type": "integer", "minimum": 0},
+        "logs_not_proof_of_game_load": {"type": "boolean"},
+        "attributable_errors": {
+          "type": "array", "items": {
+            "type": "object", "required": ["file", "line", "message"], "additionalProperties": false,
+            "properties": {
+              "file": {"type": "string"},
+              "line": {"type": "integer", "minimum": 1},
+              "message": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}
