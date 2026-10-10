@@ -20,7 +20,7 @@ LANG = re.compile(r"[a-z_]+\Z")
 LOC_NAME = re.compile(r"localization/([a-z_]+)/([A-Za-z0-9_-]+)_l_\1\.yml\Z")
 LOC_ENTRY = re.compile(r'^\s*([A-Za-z0-9_.-]+):\d*\s+"(?:[^"\\]|\\.)*"(?:\s*#.*)?$')
 GFX_PATH = re.compile(r"gfx/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.(?:dds|png|jpg|tga)\Z")
-SAFE_TEXT = re.compile(r"(?:events/cklib_[a-z0-9_]+|common/(?:activities/activity_types|on_action)/cklib_[a-z0-9_]+)\.txt\Z")
+SAFE_TEXT = re.compile(r"(?:events/cklib_[a-z0-9_]+|common/(?:activities/activity_types|on_action|decisions)/cklib_[a-z0-9_]+)\.txt\Z")
 SUPPORTED = re.compile(r"\d+\.\d+\.\*\Z")
 VERSION = re.compile(r"\d+\.\d+\.\d+\Z")
 EVENT_ID = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\.\d+\Z")
@@ -91,7 +91,7 @@ def _descriptor(raw: bytes, issues: list) -> dict:
     return result
 
 
-def _localizations(files: dict[str, bytes], issues: list) -> dict[str, str]:
+def _localizations(files: dict[str, bytes], issues: list) -> dict[tuple[str, str], str]:
     loc = {}
     for path, raw in files.items():
         m = LOC_NAME.fullmatch(path)
@@ -114,14 +114,16 @@ def _localizations(files: dict[str, bytes], issues: list) -> dict[str, str]:
                 _issue(issues, "error", "LOC_FORMAT", path, "Line " + str(number))
                 continue
             key = entry.group(1)
-            if key in loc:
-                _issue(issues, "error", "LOC_DUPLICATE", path, key + " already defined in " + loc[key])
-            loc[key] = path
+            scoped = (m.group(1), key)
+            if scoped in loc:
+                _issue(issues, "error", "LOC_DUPLICATE", path, key + " already defined in " + loc[scoped])
+            loc[scoped] = path
     return loc
 
 
-def _scripts(files: dict[str, bytes], loc: dict[str, str], vanilla: Path | None, issues: list) -> dict:
+def _scripts(files: dict[str, bytes], loc: dict[tuple[str, str], str], vanilla: Path | None, issues: list) -> dict:
     event_ids, on_action_ids, references = set(), set(), []
+    loc_keys = {key for _language, key in loc}
     parsed = {}
     for path, raw in files.items():
         if not SAFE_TEXT.fullmatch(path):
@@ -168,7 +170,7 @@ def _scripts(files: dict[str, bytes], loc: dict[str, str], vanilla: Path | None,
                                 pass
                         if not available:
                             _issue(issues, "warning" if vanilla is None else "error", "GFX_UNRESOLVED", path, literal)
-                elif field in LOCALIZATION_REF and value.startswith("cklib_") and value not in loc:
+                elif field in LOCALIZATION_REF and value.startswith("cklib_") and value not in loc_keys:
                     _issue(issues, "warning", "LOC_UNRESOLVED", path, value)
                 elif field in ("trigger_event", "id") and EVENT_ID.fullmatch(value) and (field == "trigger_event" or _in_event_trigger_context(ts, i)):
                     references.append((path, value))
