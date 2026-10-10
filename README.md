@@ -1,6 +1,6 @@
 # Bibliothèque CK3 Elements
 
-**Statut : prototypes 0.1–0.7 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
+**Statut : prototypes 0.1–0.8 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
 
 ## Principes non négociables
 
@@ -171,3 +171,28 @@ PYTHONPATH=src python -m ck3lib.package_mod \
 
 Voir [le guide v0.7](docs/package-v0.7.md) et
 [`schemas/package-recipe.schema.json`](schemas/package-recipe.schema.json).
+
+
+## Banc de validation — v0.8 (lecture seule)
+
+Le module `ck3lib.validator` vérifie les dossiers de mods v0.7 générés, leurs
+manifestes, définitions d’événements/on_action, localisations UTF-8 BOM et
+références GFX explicites. Les logs CK3 peuvent être lus **si fournis** et
+triés pour distinguer certaines erreurs attribuables aux composants `cklib_`.
+
+```bash
+PYTHONPATH=src python -m ck3lib.validator \
+  --mod-dir /chemin/mod_genere \
+  --vanilla-root /chemin/CK3/game \
+  --report-out /tmp/cklib-validation.json
+
+# Facultatif, après avoir lancé le jeu manuellement :
+PYTHONPATH=src python -m ck3lib.validator \
+  --mod-dir /chemin/mod_genere \
+  --log-dir /chemin/CK3/logs \
+  --report-out /tmp/cklib-validation-avec-logs.json
+```
+
+**Aucune validation automatique en jeu :** même un rapport sans erreur conserve
+`game_validated = false`. Pour les limites précises et le protocole de test,
+voir [le guide v0.8](docs/validation-bench-v0.8.md).
