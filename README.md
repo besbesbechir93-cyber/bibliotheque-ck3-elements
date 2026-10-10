@@ -1,6 +1,6 @@
 # Bibliothèque CK3 Elements
 
-**Statut : prototypes 0.1–0.3 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
+**Statut : prototypes 0.1–0.4 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
 
 ## Principes non négociables
 
@@ -63,6 +63,30 @@ PYTHONPATH=src python -m ck3lib.planner \
 
 Tous les statuts demandent une validation manuelle ; `REVIEW_REQUIRED` ne signifie jamais compatible avec CK3. Les dépendances hardcodées, la plupart des data bindings GUI, les DPI des sprites et les contenus DLC conditionnels restent hors couverture. Voir [la spécification v0.3](docs/integration-planner.md).
 
+## Adaptateurs de dépendances — v0.4 (simulation, aucun mod généré)
+
+L'outil `ck3lib.adapters` transforme un graphe existant et une recette versionnée
+en **intentions de référence, exclusion ou clonage**. Il propose des nouveaux
+identifiants pour événements, GUI, GFX et localisation, détecte certaines
+collisions et références entrantes, et interdit les surcharges vanilla.
+**Il ne recopie aucun asset, ne modifie aucun script et ne génère aucun mod.**
+
+```bash
+PYTHONPATH=src python -m ck3lib.adapters \
+  --graph /tmp/ck3lib-graph.json \
+  --init-recipe --component activity:activity_camp_party --namespace demo \
+  --vanilla-root /path/to/CK3/game \
+  --output /tmp/ck3lib-adapter-recipe.json
+
+PYTHONPATH=src python -m ck3lib.adapters \
+  --graph /tmp/ck3lib-graph.json \
+  --recipe /tmp/ck3lib-adapter-recipe.json \
+  --vanilla-root /path/to/CK3/game \
+  --output /tmp/ck3lib-adapter-plan.json
+```
+
+Voir [le guide v0.4](docs/adapter-dry-run.md) pour les risques et limites.
+
 ## Structure
 
 - `docs/architecture.md` : architecture et politiques de composition.
@@ -72,6 +96,8 @@ Tous les statuts demandent une validation manuelle ; `REVIEW_REQUIRED` ne signif
 - `src/ck3lib/composer.py` : compilateur expérimental en lecture seule côté vanilla.
 - `src/ck3lib/indexer.py` : indexeur statique, traversée de graphe et analyse inverse.
 - `src/ck3lib/planner.py` : audit de composition sans génération de mod.
+- `src/ck3lib/adapters.py` : planification de réutilisation/clonage, sans génération.
+- `schemas/adapter-recipe.schema.json` et `schemas/adapter-plan.schema.json` : contrats v0.4.
 - `schemas/integration-plan.schema.json` : contrat du rapport d'intégration.
 - `docs/integration-planner.md` : spécification et limites v0.3.
 - `schemas/graph.schema.json` : contrat du graphe JSON.
