@@ -190,8 +190,10 @@ def compose(recipe: dict, vanilla_root: Path, output_root: Path) -> dict:
         raise CompositionError('Output must not be inside vanilla root')
     out_rel = f'common/activities/activity_types/{target_id}.txt'
     dest = confined_path(mod_dir, out_rel)
-    if dest.exists() and not recipe.get('allow_overwrite_generated', False):
-        raise CompositionError(f"Generated file exists: {dest}")
+    if not recipe.get('allow_overwrite_generated', False):
+        for protected in (dest, mod_dir / 'descriptor.mod', mod_dir / 'composition-report.json'):
+            if protected.exists():
+                raise CompositionError(f"Refusing to overwrite existing generated or mod file: {protected}")
     copies = []
     rewrites = []
     for asset in recipe.get('assets', []):
