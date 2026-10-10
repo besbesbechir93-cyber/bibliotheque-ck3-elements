@@ -77,8 +77,15 @@ class ComposerTests(unittest.TestCase):
             compose(self.recipe, self.vanilla, self.out)
     def test_repeat_generation_requires_opt_in(self):
         compose(self.recipe, self.vanilla, self.out)
-        with self.assertRaisesRegex(CompositionError, 'exists'):
+        with self.assertRaisesRegex(CompositionError, 'Refusing to overwrite'):
             compose(self.recipe, self.vanilla, self.out)
+    def test_existing_mod_descriptor_is_protected(self):
+        self.out.mkdir()
+        existing = self.out / 'descriptor.mod'
+        existing.write_text('name="Existing Mod"\\n')
+        with self.assertRaisesRegex(CompositionError, 'Refusing to overwrite'):
+            compose(self.recipe, self.vanilla, self.out)
+        self.assertEqual(existing.read_text(), 'name="Existing Mod"\\n')
 
 if __name__ == '__main__':
     unittest.main()
