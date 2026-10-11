@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/ck3lib/activity-smoke-recipe-v1.schema.json",
+  "title": "CKLib v1.0 Activity Smoke Recipe",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "mod_name", "mod_version", "supported_version", "cooldown_days", "gold_cost", "prestige_reward"],
+  "properties": {
+    "version": {"const": 1},
+    "mod_name": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9 ._-]{2,64}$"},
+    "mod_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "supported_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.\\*$"},
+    "cooldown_days": {"type": "integer", "minimum": 1, "maximum": 3650},
+    "gold_cost": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "prestige_reward": {"type": "integer", "minimum": 0, "maximum": 100}
+  }
+}

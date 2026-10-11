@@ -216,3 +216,21 @@ Voir [la procédure de test v0.9](docs/smoke-demo-v0.9.md). **Les tests automati
 ne sont pas des tests en jeu.** Le chemin GFX vanilla est référencé, pas copié.
 La v0.8 corrige également la reconnaissance des décisions et des localisations
 multilingues, sans considérer les mêmes clés traduites comme des doublons.
+
+## Sonde d'activité indépendante — v1.0 (expérimentale)
+
+Après la décision de contrôle v0.9, `ck3lib.activity_smoke` génère une activité CK3
+**originale** (et non une copie vanilla) avec une phase, son événement propre et
+une décision de contrôle indépendante. `cooldown_days`, `gold_cost` et
+`prestige_reward` sont configurables via une recette bornée.
+
+```bash
+PYTHONPATH=src python -m ck3lib.activity_smoke \
+  --recipe examples/activity-smoke-v1.0.json \
+  --output /tmp/cklib-v1-activity
+```
+
+La sortie contient un dossier de mod, son fichier `.mod` pour le launcher, des
+localisations français/anglais et un protocole d'essai. **Le mod n'a pas été
+validé par l'exécution dans CK3** : en cas d'échec, fournir les résultats et les
+logs. Voir [la documentation v1.0](docs/activity-smoke-v1.0.md).
