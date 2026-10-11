@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "mod_name": "CKLib v1.0 Activity Probe",
+  "mod_version": "1.0.0",
+  "supported_version": "1.20.*",
+  "cooldown_days": 30,
+  "gold_cost": 0,
+  "prestige_reward": 5
+}
