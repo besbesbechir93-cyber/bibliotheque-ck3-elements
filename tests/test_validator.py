@@ -84,6 +84,40 @@ cklib_test.2 = { hidden = yes }
                    'l_english:\n cklib_test_title:0 "Demo"\n')
         self.assertIn('LOC_BOM', self.codes(validate(self.mod)))
 
+    def test_localization_is_checked_for_each_declared_language(self):
+        self.write('localization/french/cklib_generated_l_french.yml', '\ufeffl_french:\n')
+        self.manifest()
+        warnings = [x for x in validate(self.mod)['diagnostics'] if x['code'] == 'LOC_UNRESOLVED']
+        self.assertEqual({x['detail'] for x in warnings},
+                         {'[french] cklib_test_title', '[french] cklib_activity_desc'})
+
+    def test_quoted_selection_tooltip_is_checked(self):
+        self.write('common/decisions/cklib_demo.txt',
+                   'cklib_demo = { selection_tooltip = "cklib_missing_tooltip" }')
+        self.manifest()
+        warnings = [x for x in validate(self.mod)['diagnostics'] if x['code'] == 'LOC_UNRESOLVED']
+        self.assertEqual([x['detail'] for x in warnings], ['[english] cklib_missing_tooltip'])
+
+    def test_activity_prefixed_localization_is_checked(self):
+        self.write('common/activities/activity_types/cklib_demo.txt',
+                   'activity_cklib_demo = { desc = activity_cklib_missing_desc }')
+        warnings = [x for x in validate(self.mod)['diagnostics'] if x['code'] == 'LOC_UNRESOLVED']
+        self.assertEqual([x['detail'] for x in warnings], ['[english] activity_cklib_missing_desc'])
+
+    def test_localization_without_language_files_uses_english_review(self):
+        (self.mod / 'localization/english/cklib_generated_l_english.yml').unlink()
+        self.manifest()
+        warnings = [x for x in validate(self.mod)['diagnostics'] if x['code'] == 'LOC_UNRESOLVED']
+        self.assertEqual({x['detail'] for x in warnings},
+                         {'[english] cklib_test_title', '[english] cklib_activity_desc'})
+
+    def test_quoted_prose_and_external_keys_are_not_private_references(self):
+        self.write('common/decisions/cklib_demo.txt',
+                   'cklib_demo = { desc = "cklib_ is a literal sentence" '
+                   'selection_tooltip = vanilla_tooltip }')
+        self.manifest()
+        self.assertNotIn('LOC_UNRESOLVED', self.codes(validate(self.mod)))
+
     def test_duplicate_localization_detected(self):
         self.write('localization/english/cklib_generated_l_english.yml',
                    '\ufeffl_english:\n duplicate:0 "1"\n duplicate:0 "2"\n')
