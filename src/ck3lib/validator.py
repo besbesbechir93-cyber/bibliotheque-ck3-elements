@@ -26,7 +26,8 @@ VERSION = re.compile(r"\d+\.\d+\.\d+\Z")
 EVENT_ID = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\.\d+\Z")
 DESCRIPTOR = re.compile(r'^\s*([a-z_]+)\s*=\s*"([^"\n\r]*)"\s*(?:#.*)?$')
 LOG_ERROR = re.compile(r"\b(?:error|exception|failed|not found|unknown)\b", re.IGNORECASE)
-LOCALIZATION_REF = frozenset(("title", "desc", "name", "text", "tooltip", "description", "custom_tooltip"))
+LOCALIZATION_REF = frozenset(("title", "desc", "name", "text", "tooltip", "description", "custom_tooltip", "selection_tooltip"))
+PRIVATE_LOC_KEY = re.compile(r"(?:activity_)?cklib_[A-Za-z0-9_.-]+\Z")
 
 
 def _issue(issues: list, severity: str, code: str, path: str, detail: str) -> None:
@@ -123,7 +124,8 @@ def _localizations(files: dict[str, bytes], issues: list) -> dict[tuple[str, str
 
 def _scripts(files: dict[str, bytes], loc: dict[tuple[str, str], str], vanilla: Path | None, issues: list) -> dict:
     event_ids, on_action_ids, references = set(), set(), []
-    loc_keys = {key for _language, key in loc}
+    # A translation in one language must not hide a missing key in another.
+    languages = sorted({m.group(1) for path in files if (m := LOC_NAME.fullmatch(path))} or {"english"})
     parsed = {}
     for path, raw in files.items():
         if not SAFE_TEXT.fullmatch(path):
@@ -158,8 +160,12 @@ def _scripts(files: dict[str, bytes], loc: dict[tuple[str, str], str], vanilla: 
             if i >= 2 and ts[i-1].text == "=":
                 field = ts[i-2].text
                 value = t.text
+                literal = value[1:-1] if value.startswith('"') and value.endswith('"') else value
+                if field in LOCALIZATION_REF and PRIVATE_LOC_KEY.fullmatch(literal):
+                    for language in languages:
+                        if (language, literal) not in loc:
+                            _issue(issues, "warning", "LOC_UNRESOLVED", path, f"[{language}] {literal}")
                 if value.startswith('"') and value.endswith('"'):
-                    literal = value[1:-1]
                     if GFX_PATH.fullmatch(literal):
                         available = literal in files
                         if not available and vanilla is not None:
@@ -170,8 +176,6 @@ def _scripts(files: dict[str, bytes], loc: dict[tuple[str, str], str], vanilla: 
                                 pass
                         if not available:
                             _issue(issues, "warning" if vanilla is None else "error", "GFX_UNRESOLVED", path, literal)
-                elif field in LOCALIZATION_REF and value.startswith("cklib_") and value not in loc_keys:
-                    _issue(issues, "warning", "LOC_UNRESOLVED", path, value)
                 elif field in ("trigger_event", "id") and EVENT_ID.fullmatch(value) and (field == "trigger_event" or _in_event_trigger_context(ts, i)):
                     references.append((path, value))
                 elif field == "on_action" and value.startswith("cklib_") and value not in on_action_ids:

@@ -97,6 +97,20 @@ class ActivitySmokeTests(unittest.TestCase):
         self.assertTrue(all(not k.startswith('gfx/') for k in files))
         self.assertIn(GFX,files['common/activities/activity_types/cklib_activity_probe_v10.txt'].decode('utf-8-sig'))
 
+    def test_default_activity_descriptions_are_translated(self):
+        # _activity_type.info documents these implicit engine lookups.
+        from ck3lib.activity_smoke import PHASE_ID
+        from ck3lib.validator import LOC_ENTRY
+        for lang in ('english', 'french'):
+            raw = render(RECIPE)[f'localization/{lang}/cklib_activity_probe_l_{lang}.yml']
+            keys = {m.group(1) for line in raw.decode('utf-8-sig').splitlines()
+                    if (m := LOC_ENTRY.fullmatch(line))}
+            expected = {ACTIVITY_ID + suffix for suffix in (
+                '_province_desc', '_host_desc', '_guest_desc', '_conclusion_desc')}
+            expected.add(PHASE_ID + '_desc')
+            with self.subTest(language=lang):
+                self.assertFalse(expected - keys, expected - keys)
+
     def test_safe_new_directory_and_metadata(self):
         with tempfile.TemporaryDirectory() as base:
             d=Path(base)/'generated'

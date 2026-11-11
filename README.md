@@ -1,6 +1,6 @@
 # Bibliothèque CK3 Elements
 
-**Statut : prototypes 0.1–0.8 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
+**Statut : prototypes 0.1–1.0 expérimentaux — non validés en jeu.** Ce dépôt vise une bibliothèque composable de mécaniques CK3 et un futur compilateur de mods. Il ne contient aucun fichier vanilla ni texture propriétaire.
 
 ## Principes non négociables
 
@@ -234,3 +234,13 @@ La sortie contient un dossier de mod, son fichier `.mod` pour le launcher, des
 localisations français/anglais et un protocole d'essai. **Le mod n'a pas été
 validé par l'exécution dans CK3** : en cas d'échec, fournir les résultats et les
 logs. Voir [la documentation v1.0](docs/activity-smoke-v1.0.md).
+
+### Correctif de localisation v1.0.1
+
+La sonde fournit désormais les descriptions implicites de lieu, hôte, invité,
+conclusion et phase en français et en anglais. Le validateur contrôle les
+références explicites privées par langue déclarée, y compris les clés entre
+guillemets, `selection_tooltip` et le préfixe `activity_cklib_`.
+Ces diagnostics restent des avertissements de revue : ils ne simulent pas les
+replis de langue du moteur. Les recherches implicites de l'interface ne sont
+pas découvertes automatiquement. Voir [l'audit v1.0.1](docs/localization-review-v1.0.1.md).
